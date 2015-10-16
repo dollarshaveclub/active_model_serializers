@@ -40,15 +40,19 @@ module ActiveModel
       # @api private
       #
       def build_association(subject, parent_serializer_options)
+
         association_value = subject.send(name)
         reflection_options = options.dup
+        scope_version = parent_serializer_options.fetch(:scope, {})
+        reflection_options[:version] = parent_serializer_options.fetch(:scope, {}).version if scope_version.respond_to?(:version)
         serializer_class = ActiveModel::Serializer.serializer_for(association_value, reflection_options)
+
 
         if serializer_class
           begin
             serializer = serializer_class.new(
-              association_value,
-              serializer_options(parent_serializer_options, reflection_options)
+                association_value,
+                serializer_options(parent_serializer_options, reflection_options)
             )
           rescue ActiveModel::Serializer::ArraySerializer::NoSerializerError
             reflection_options[:virtual_value] = association_value.try(:as_json) || association_value
@@ -57,7 +61,8 @@ module ActiveModel
           reflection_options[:virtual_value] = association_value
         end
 
-        Association.new(name, serializer, reflection_options)
+        ActiveModel::Serializer::Association.new(name, serializer, reflection_options)
+
       end
 
       private

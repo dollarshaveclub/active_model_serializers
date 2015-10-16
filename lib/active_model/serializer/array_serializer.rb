@@ -12,9 +12,8 @@ module ActiveModel
         @object = resources
         @serializers = resources.map do |resource|
           serializer_class = options.fetch(:serializer) {
-            ActiveModel::Serializer.serializer_for(resource)
+            ActiveModel::Serializer.serializer_for(resource, options)
           }
-
           if serializer_class.nil?
             fail NoSerializerError, "No serializer found for resource: #{resource.inspect}"
           else

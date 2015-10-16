@@ -39,16 +39,23 @@ module ActiveModel
     # Replace :serializer key with :each_serializer if present
     def serializer
       @serializer ||=
-        begin
-          @serializer = serializer_opts.delete(:serializer)
-          @serializer ||= ActiveModel::Serializer.serializer_for(resource)
+          begin
+            @serializer = serializer_opts.delete(:serializer)
 
-          if serializer_opts.key?(:each_serializer)
-            serializer_opts[:serializer] = serializer_opts.delete(:each_serializer)
+            if serialization_scope && serialization_scope.respond_to?(:version)
+              serializer_opts[:version] == serialization_scope.version
+            end
+
+            @serializer ||= ActiveModel::Serializer.serializer_for(resource, serializer_opts)
+
+            if serializer_opts.key?(:each_serializer)
+              serializer_opts[:serializer] = serializer_opts.delete(:each_serializer)
+            end
+
+            @serializer
           end
-          @serializer
-        end
     end
+
     alias_method :serializer_class, :serializer
 
     # True when no explicit adapter given, or explicit appear is truthy (non-nil)

@@ -86,13 +86,15 @@ module ActiveModel
     end
 
     def self.serializer_for(resource, options = {})
+
       if resource.respond_to?(:serializer_class)
         resource.serializer_class
       elsif resource.respond_to?(:to_ary)
         config.array_serializer
       else
-        options.fetch(:serializer, get_serializer_for(resource.class))
+        options.fetch(:serializer, get_serializer_for(resource.class, options))
       end
+
     end
 
     # @see ActiveModel::Serializer::Adapter.lookup
@@ -155,9 +157,12 @@ module ActiveModel
 
     attr_reader :options
 
-    def self.get_serializer_for(klass)
+    def self.get_serializer_for(klass, options = {})
+
       serializers_cache.fetch_or_store(klass) do
-        serializer_class_name = "#{klass.name}Serializer"
+
+        version = get_options_version(options)
+        serializer_class_name = highest_serializer_class_name(klass, version)
         serializer_class = serializer_class_name.safe_constantize
 
         if serializer_class
@@ -165,7 +170,30 @@ module ActiveModel
         elsif klass.superclass
           get_serializer_for(klass.superclass)
         end
+
       end
+
     end
+
+    def self.get_options_version(options)
+      return options[:version] unless options[:version].nil?
+      return options[:scope].version if options[:scope].respond_to?(:version)
+    end
+
+    def self.highest_serializer_class_name(klass, version = nil)
+
+      if  klass && version
+
+        for i in (version).downto(1)
+          serializer_class_name = "V#{i.to_s}::#{klass.name}Serializer"
+          return serializer_class_name if serializer_class_name.safe_constantize
+        end
+
+      end
+
+      "#{klass.name}Serializer"
+
+    end
+
   end
 end
