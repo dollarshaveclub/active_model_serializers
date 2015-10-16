@@ -84,13 +84,21 @@ module ActiveModel
       # @return [Enumerator<Association>]
       #
       def associations
+
         return unless object
 
         Enumerator.new do |y|
           self.class._reflections.each do |reflection|
-            y.yield reflection.build_association(self, options)
+
+            begin
+              y.yield reflection.build_association(self, options)
+            rescue Exception => e
+              raise Exception.new e.message unless object.is_a?(JsonApiClient::Resource)
+            end
+
           end
         end
+
       end
     end
   end
