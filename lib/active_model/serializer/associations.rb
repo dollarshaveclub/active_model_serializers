@@ -89,13 +89,7 @@ module ActiveModel
 
         Enumerator.new do |y|
           self.class._reflections.each do |reflection|
-
-            begin
-              y.yield reflection.build_association(self, options)
-            rescue Exception => e
-              raise Exception.new e.message unless object.is_a?(JsonApiClient::Resource)
-            end
-
+            y.yield reflection.build_association(self, options)
           end
         end
 
