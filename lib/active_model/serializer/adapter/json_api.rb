@@ -62,11 +62,21 @@ class ActiveModel::Serializer::Adapter::JsonApi < ActiveModel::Serializer::Adapt
         end
 
         def resource_identifier_type_for(serializer)
-          if ActiveModel::Serializer.config.jsonapi_resource_type == :singular
-            serializer.object.class.model_name.singular
+
+          if serializer.object.respond_to?(:serialized_identifier_type)
+            if ActiveModel::Serializer.config.jsonapi_resource_type == :singular
+              serializer.object.serialized_identifier_type.singularize
+            else
+              serializer.object.serialized_identifier_type.pluralize
+            end
           else
-            serializer.object.class.model_name.plural
+            if ActiveModel::Serializer.config.jsonapi_resource_type == :singular
+              serializer.object.class.model_name.singular
+            else
+              serializer.object.class.model_name.plural
+            end
           end
+
         end
 
         def resource_identifier_id_for(serializer)
