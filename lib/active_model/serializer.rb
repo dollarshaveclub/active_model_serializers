@@ -182,16 +182,29 @@ module ActiveModel
 
     def self.highest_serializer_class_name(klass, version = nil)
 
-      if  klass && version
+      split_names = klass.name.split('::')
+      split_names.map!{ |v| v == 'Models' ? 'Serializers' : v }
 
-        for i in (version).downto(1)
-          serializer_class_name = "V#{i.to_s}::#{klass.name}Serializer"
+      if  klass && klass.inspect != 'NilClass' && version
+
+        serializers_index = split_names.index('Serializers')
+
+        (version).downto(1).each do |i|
+
+          if serializers_index
+            split_names.insert(serializers_index + 1, "V#{i.to_s}")
+          else
+            split_names.insert(-2, "V#{i.to_s}")
+          end
+
+          serializer_class_name = "#{split_names.join('::')}Serializer"
           return serializer_class_name if serializer_class_name.safe_constantize
+
         end
 
       end
 
-      "#{klass.name}Serializer"
+      "#{split_names.join('::')}Serializer"
 
     end
 
